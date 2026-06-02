@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.ai.query</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="30"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@class='settings']" position="inside">
+                <div class="app_settings_block" data-string="AI Query" string="AI Query Assistant" data-key="odoo_ai_query">
+                    <h2>AI Query Assistant Configuration</h2>
+                    <div class="row mt16 o_settings_container">
+                        <!-- API Key -->
+                        <div class="col-12 col-lg-6 o_setting_box" id="ai_query_api_key_setting">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="ai_query_api_key" string="Anthropic API Key"/>
+                                <div class="text-muted">
+                                    Enter your Anthropic API Key to enable Natural Language querying.
+                                </div>
+                                <div class="content-group mt8">
+                                    <field name="ai_query_api_key" password="True" placeholder="sk-ant-..."/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Limits -->
+                        <div class="col-12 col-lg-6 o_setting_box" id="ai_query_limits_setting">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label string="Query Limits"/>
+                                <div class="text-muted">
+                                    Set default and maximum limits for query results.
+                                </div>
+                                <div class="content-group mt8">
+                                    <div class="row mt8">
+                                        <label for="ai_query_default_limit" string="Default Limit" class="col-lg-4 o_light_label"/>
+                                        <div class="col-lg-8">
+                                            <field name="ai_query_default_limit"/>
+                                        </div>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="ai_query_max_limit" string="Max Limit" class="col-lg-4 o_light_label"/>
+                                        <div class="col-lg-8">
+                                            <field name="ai_query_max_limit"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_ai_query_config_settings" model="ir.actions.act_window">
+        <field name="name">AI Query Settings</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'odoo_ai_query'}</field>
+    </record>
+
+    <menuitem id="menu_ai_query_config"
+              name="AI Query Settings"
+              parent="base.menu_administration"
+              sequence="100"
+              action="action_ai_query_config_settings"/>
+</odoo>

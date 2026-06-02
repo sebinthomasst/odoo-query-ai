@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="result_template">
+        <div class="table-responsive" style="margin-top: 12px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02); border: 1px solid #eef2f5; overflow: hidden; background: #ffffff;">
+            <table class="table table-hover align-middle" style="margin-bottom: 0; font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif; border-collapse: separate; border-spacing: 0;">
+                <thead>
+                    <tr style="background: linear-gradient(180deg, #fdfdfe 0%, #f7f9fa 100%);">
+                        <t t-foreach="fields" t-as="f">
+                            <th scope="col" t-att-style="'text-align: right; font-weight: 600; color: #495057; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eaedf1; padding: 14px 18px;' if is_number(f, (data and data[0] or {}).get(f)) else 'text-align: left; font-weight: 600; color: #495057; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eaedf1; padding: 14px 18px;'">
+                                <t t-esc="f.replace('_', ' ').capitalize()"/>
+                            </th>
+                        </t>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-if="not data">
+                        <tr>
+                            <td t-att-colspan="len(fields) if fields else 1" class="text-center text-muted" style="padding: 40px 24px; background-color: #fafbfc;">
+                                <div style="font-size: 1.15rem; font-weight: 600; color: #6c757d; margin-bottom: 6px;">No data matched your query</div>
+                                <div style="font-size: 0.875rem; color: #8c98a5;">Try adjusting your filters, double-checking the dates, or widening your search bounds.</div>
+                            </td>
+                        </tr>
+                    </t>
+                    <t t-else="">
+                        <t t-foreach="data" t-as="row">
+                            <tr style="transition: background-color 0.15s ease; border-bottom: 1px solid #f2f4f7;">
+                                <t t-foreach="fields" t-as="f">
+                                    <td t-att-style="'text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; padding: 12px 18px; font-size: 0.9rem; color: #2c3e50; border-bottom: 1px solid #f2f4f7;' if is_number(f, row.get(f)) else 'text-align: left; padding: 12px 18px; font-size: 0.9rem; color: #34495e; border-bottom: 1px solid #f2f4f7;'">
+                                        <t t-esc="format_val(f, row.get(f))"/>
+                                    </td>
+                                </t>
+                            </tr>
+                        </t>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </template>
+</odoo>
