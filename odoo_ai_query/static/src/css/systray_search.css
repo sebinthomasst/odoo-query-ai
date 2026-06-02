@@ -1,0 +1,83 @@
+/* AI Systray Search Bar Custom CSS Styling */
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+    50% {
+        transform: scale(1.15);
+        opacity: 1;
+        text-shadow: 0 0 8px rgba(255, 193, 7, 0.6);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.o_ai_systray_btn:hover {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+    border-radius: 8px;
+    color: #212529 !important;
+}
+
+.o_ai_search_dropdown {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 1px 8px rgba(0, 0, 0, 0.03) !important;
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+}
+
+.o_ai_search_input:focus {
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.15) !important;
+}
+
+/* Custom Scrollbar for results dropdown */
+.o_ai_body::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.o_ai_body::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.o_ai_body::-webkit-scrollbar-thumb {
+    background: #dee2e6;
+    border-radius: 4px;
+}
+
+.o_ai_body::-webkit-scrollbar-thumb:hover {
+    background: #ced4da;
+}
+
+/* Dynamic table styling overrides inside the dropdown container */
+.o_ai_table_container {
+    overflow-x: auto;
+    border-radius: 8px;
+}
+
+.o_ai_table_container table {
+    margin-bottom: 0 !important;
+    font-size: 0.85rem !important;
+}
+
+.o_ai_table_container th {
+    padding: 10px 14px !important;
+}
+
+.o_ai_table_container td {
+    padding: 10px 14px !important;
+}

@@ -15,6 +15,13 @@ Supports Odoo 13 through 18 via dynamic version mapping.
         "views/ai_query_settings_views.xml",
         "views/result_template.xml"
     ],
+    "assets": {
+        "web.assets_backend": [
+            "odoo_ai_query/static/src/css/systray_search.css",
+            "odoo_ai_query/static/src/xml/systray_search.xml",
+            "odoo_ai_query/static/src/js/systray_search.js"
+        ]
+    },
     "installable": True,
     "application": False,
     "auto_install": False

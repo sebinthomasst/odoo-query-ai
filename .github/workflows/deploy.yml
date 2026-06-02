@@ -1,0 +1,44 @@
+name: Validate and Package Odoo Module
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-and-package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Run Python Compile Check
+        run: |
+          python3 -m py_compile odoo_ai_query/*.py odoo_ai_query/models/*.py odoo_ai_query/controllers/*.py odoo_ai_query/tests/*.py
+
+      - name: Lint Code with Flake8
+        run: |
+          pip install flake8
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 odoo_ai_query --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings.
+          flake8 odoo_ai_query --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Package Addon Zip
+        run: |
+          zip -r odoo_ai_query.zip odoo_ai_query -x "*.pyc" "__pycache__/*" "*/__pycache__/*"
+
+      - name: Upload Packaged Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: odoo_ai_query
+          path: odoo_ai_query.zip

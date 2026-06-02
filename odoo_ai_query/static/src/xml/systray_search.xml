@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="odoo_ai_query.AISystraySearch" owl="1">
+        <div class="o_ai_systray_search" t-ref="root" style="position: relative; display: inline-block;">
+            <button class="o_ai_systray_btn btn d-flex align-items-center gap-2 border-0 px-3 py-2 text-secondary" t-on-click="toggleSearch" title="Ask AI Assistant">
+                <i class="fa fa-magic text-warning" style="animation: pulse 2s infinite ease-in-out;"></i>
+                <span class="d-none d-lg-inline fw-semibold text-dark fs-7" style="font-family: 'Outfit', 'Inter', sans-serif;">Ask AI</span>
+            </button>
+            
+            <div t-if="state.isOpen" class="o_ai_search_dropdown shadow-lg bg-white border border-light" style="position: absolute; right: 0; top: 100%; margin-top: 8px; z-index: 1050; border-radius: 16px; min-width: 650px; overflow: hidden; animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
+                <!-- Search Input Header -->
+                <div class="o_ai_header p-3 border-bottom d-flex align-items-center gap-2 bg-light">
+                    <i class="fa fa-magic text-warning fs-5"></i>
+                    <input type="text" 
+                           class="form-control o_ai_search_input border-light" 
+                           placeholder="Ask your ERP data (e.g. top 5 confirmation orders YTD)..." 
+                           t-model="state.query"
+                           t-on-keydown="onKeydown"
+                           style="border-radius: 8px; font-size: 0.9rem;"
+                           autofocus="true"/>
+                    <button class="btn btn-primary btn-sm px-3" t-on-click="performSearch" t-att-disabled="state.loading" style="border-radius: 8px; font-weight: 500;">
+                        <t t-if="state.loading">
+                            <i class="fa fa-spinner fa-spin me-1"></i>
+                        </t>
+                        <t t-else="">Ask</t>
+                    </button>
+                    <button class="btn btn-close ms-2" t-on-click="closeSearch" style="box-shadow: none;"></button>
+                </div>
+                
+                <!-- Dropdown Body -->
+                <div class="o_ai_body p-3 overflow-auto" style="max-height: 480px;">
+                    <t t-if="state.loading">
+                        <div class="text-center my-5 py-5">
+                            <div class="spinner-border text-primary my-2" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
+                            <div class="text-muted mt-3 fw-medium" style="font-size: 0.9rem;">Asking Claude AI &amp; executing database query...</div>
+                        </div>
+                    </t>
+                    <t t-elif="state.error">
+                        <div class="alert alert-danger d-flex align-items-center gap-2 m-2" style="border-radius: 8px;">
+                            <i class="fa fa-exclamation-triangle fs-5"></i>
+                            <div class="fw-medium"><t t-esc="state.error"/></div>
+                        </div>
+                    </t>
+                    <t t-elif="state.result">
+                        <!-- Query Translation -->
+                        <div class="mb-3">
+                            <div class="badge bg-light text-dark border p-2 text-start w-100 font-monospace d-flex align-items-center gap-2" style="font-size: 0.82rem; border-radius: 8px; line-height: 1.4;">
+                                <i class="fa fa-commenting text-muted fs-6"></i>
+                                <span><strong>Understood as:</strong> <t t-esc="state.result.understood_as"/></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Rich QWeb HTML Table Output -->
+                        <div class="o_ai_table_container mb-3">
+                            <t t-out="state.result.html"/>
+                        </div>
+                        
+                        <!-- Insight Summary -->
+                        <div class="o_ai_summary_box p-3 rounded-3 border mt-3 bg-gradient" style="background: linear-gradient(135deg, #f8fafd 0%, #f1f6fc 100%); border-radius: 12px; border-color: #e2ecf7 !important;">
+                            <h6 class="fw-bold d-flex align-items-center gap-2 mb-2 text-primary" style="font-size: 0.92rem; font-family: 'Outfit', sans-serif;">
+                                <i class="fa fa-info-circle fs-5"></i> AI Insight Summary
+                            </h6>
+                            <p class="text-muted m-0 fs-7" style="line-height: 1.6; font-size: 0.85rem; color: #4b5563 !important;"><t t-esc="state.result.summary"/></p>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="text-center text-muted my-5 py-3">
+                            <i class="fa fa-comments-o text-light mb-3" style="font-size: 3.5rem;"></i>
+                            <div style="font-size: 1.1rem; font-weight: 600; color: #374151;">Ask AI ERP Assistant</div>
+                            <div class="text-muted mt-2 px-4" style="font-size: 0.85rem; line-height: 1.6;">
+                                Ask any business question and I will fetch live, secure data instantly.<br/>
+                                <div class="mt-3 p-2 bg-light rounded" style="border-radius: 8px; font-family: monospace;">
+                                    "Show our total revenue for this financial year"<br/>
+                                    "Which products are below their reorder point?"
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import calendar
+import json
 import re
+import requests
 from datetime import datetime, date, timedelta
 from odoo import models, fields, api, _
 from odoo.exceptions import AccessError
@@ -404,3 +406,115 @@ class AIQueryBuilder(models.AbstractModel):
             response['html'] = f"<div class='alert alert-danger'>Error rendering HTML table: {str(e)}</div>"
 
         return response
+
+    def ask_claude(self, question):
+        if not question:
+            return {'error': _("Please provide a question.")}
+
+        # Fetch API Key securely (from sudo config parameters)
+        params = self.env['ir.config_parameter'].sudo()
+        api_key = params.get_param('odoo_ai_query.api_key')
+        if not api_key:
+            return {'error': _("Claude API Key is not configured. Please enter your API Key in Settings -> AI Query Settings first.")}
+
+        version = self._detect_version()
+
+        # Formulate System Prompt with detailed Odoo instructions
+        system_prompt = f"""You are an expert Odoo ORM query generator for Odoo version {version}.
+Convert the user's natural language question into a precise JSON ORM query payload.
+
+Supported Domains & Models:
+1. Sales: sale.order, sale.order.line, product.product, product.template
+   Fields: amount_total, state, partner_id, user_id, date_order, product_id, qty_ordered, price_unit, discount, margin
+   States: draft=Quotation, sent=Sent, sale=Confirmed, done=Locked, cancel=Cancelled
+2. Accounting: account.move, account.move.line, account.payment, res.partner
+   Fields: move_type (out_invoice, in_invoice, out_refund), payment_state, amount_residual, invoice_date, invoice_date_due, journal_id, state (draft, posted, cancel)
+   Note: Always filter move_type explicitly for invoice/bill queries!
+3. Inventory: stock.quant, stock.move, stock.picking, stock.warehouse
+   Fields: qty_available, virtual_available, incoming_qty, outgoing_qty, reserved_quantity, location_id, product_id
+4. CRM: crm.lead, crm.stage
+   Fields: stage_id, probability, expected_revenue, date_conversion, user_id, partner_id, type (lead vs opportunity)
+5. HR / Payroll: hr.employee, hr.leave, hr.payslip (Require hr.group_hr_manager check)
+6. Purchase: purchase.order, purchase.order.line
+   Fields: state, amount_total, partner_id, date_approve, date_planned
+
+Rules:
+1. Return EXACTLY a JSON payload structure, no conversation, no fluff:
+{{
+  "understood_as": "A clear, detailed description of how you translated their query.",
+  "model": "odoo.model.name",
+  "domain": [["field", "operator", "value"], ...],
+  "fields": ["field1", "relational_id.field2", ...],
+  "limit": 100,
+  "order": "field desc",
+  "group_by": ["field"]
+}}
+2. For aggregations (sum, count, avg) use read_group by specifying "group_by" and aggregated fields (e.g. 'amount_total:sum', 'qty_ordered:sum').
+3. For Many2one fields, use dot notation in fields display (e.g., 'partner_id.name') but IDs in domain comparisons.
+4. Convert all natural dates to keywords: 'today', 'this week', 'this month', 'last month', 'this quarter', 'last quarter', 'YTD', 'last 7 days', or specific quarter ranges (e.g. 'Q2 2024_start', 'Q2 2024_end').
+5. If the model or module doesn't exist or query is impossible, return: {{"error": "explanation"}}
+"""
+
+        # Call Claude API
+        url = 'https://api.anthropic.com/v1/messages'
+        headers = {
+            'x-api-key': api_key,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json'
+        }
+        data = {
+            'model': 'claude-3-5-sonnet-20241022',
+            'max_tokens': 2000,
+            'system': system_prompt,
+            'messages': [
+                {'role': 'user', 'content': question}
+            ]
+        }
+
+        try:
+            res = requests.post(url, headers=headers, json=data, timeout=15)
+            if res.status_code != 200:
+                return {'error': _("Claude API returned error code %s: %s") % (res.status_code, res.text)}
+            
+            res_data = res.json()
+            content = res_data.get('content', [{}])[0].get('text', '')
+        except Exception as e:
+            return {'error': _("Failed to communicate with Claude: %s") % str(e)}
+
+        # JSON Safety Wrapper & Extractor
+        parsed_payload = self._extract_json(content)
+        if not parsed_payload:
+            return {'error': _("Claude did not return a valid JSON payload. Response: %s") % content}
+
+        if 'error' in parsed_payload:
+            return {'error': parsed_payload['error']}
+
+        # Build and execute query
+        return self.build_and_execute(parsed_payload)
+
+    def _extract_json(self, response_text):
+        if not response_text:
+            return {}
+        try:
+            return json.loads(response_text.strip())
+        except json.JSONDecodeError:
+            pass
+
+        # Try markdown code blocks
+        match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', response_text, re.DOTALL | re.IGNORECASE)
+        if match:
+            try:
+                return json.loads(match.group(1).strip())
+            except json.JSONDecodeError:
+                pass
+
+        # Try first { and last }
+        start = response_text.find('{')
+        end = response_text.rfind('}')
+        if start != -1 and end != -1:
+            try:
+                return json.loads(response_text[start:end+1].strip())
+            except json.JSONDecodeError:
+                pass
+
+        return {}

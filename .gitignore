@@ -1,0 +1,18 @@
+# Python temporary and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+
+# Odoo log files and system files
+*.log
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local system config files
+*.conf
